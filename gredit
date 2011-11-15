@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# set -x
 edit="vim %s +%s"
 
 function runGrep { 
@@ -10,6 +10,11 @@ function runGrep {
 	editPrompt
 }
 
+function is_integer {
+	[ "$1" -eq "$1" ] > /dev/null 2>&1
+	return $?	
+}
+
 function getDetails {
 	found=`grep -c $@`
 	files=(`echo "$found" | awk -F ':' '{print $1}'`)
@@ -17,13 +22,15 @@ function getDetails {
 
 	filecount=0
 	occurance=0
-
 	for ((i=0; i<${#files[@]}; i++)); do
-			if [ ${occurs[$i]} -gt 0 ]; 
+			if is_integer ${occurs[$i]};
 			then
-					let filecount=$filecount+1
-					filelist=(${filelist[@]} ${files[$i]})
-					let occurance=$occurance+${occurs[$i]}
+				if [ "${occurs[$i]}" -gt "0" ]; 
+				then
+						let filecount=$filecount+1
+						filelist=(${filelist[@]} ${files[$i]})
+						let occurance=$occurance+${occurs[$i]}
+				fi
 			fi
 	done
 	printf "Found %s occurances in %s file(s)" $occurance $filecount
@@ -31,12 +38,15 @@ function getDetails {
 
 function editPrompt {
 	for ((i=0; i<${#name[@]}; i++)); do
-		printf "\nEdit on line %s of %s [Y/n] ? " ${num[$i]} ${name[$i]}
-		read prompt
-		if [ "$prompt" = "n" -o "$prompt" = "N" ]; then
-			continue
+		if is_integer ${num[$i]}; 
+		then
+			printf "\nEdit on line %s of %s [Y/n] ? " ${num[$i]} ${name[$i]}
+			read prompt
+			if [ "$prompt" = "n" -o "$prompt" = "N" ]; then
+				continue
+			fi
+			`printf "$edit" ${name[$i]} ${num[$i]}`
 		fi
-		`printf "$edit" ${name[$i]} ${num[$i]}`
 	done
 }
 
