@@ -1,0 +1,43 @@
+#!/bin/bash
+
+edit="vim %s +%s"
+
+function runGrep { 
+	found=`grep -n $@`
+	name=(`echo "$found" | awk -F ':' '{print $1}'`)
+	num=(`echo "$found" | awk -F ':' '{print $2}'`)
+	getDetails $@
+	editPrompt
+}
+
+function getDetails {
+	found=`grep -c $@`
+	files=(`echo "$found" | awk -F ':' '{print $1}'`)
+	occurs=(`echo "$found" | awk -F ':' '{print $2}'`)
+
+	filecount=0
+	occurance=0
+
+	for ((i=0; i<${#files[@]}; i++)); do
+			if [ ${occurs[$i]} -gt 0 ]; 
+			then
+					let filecount=$filecount+1
+					filelist=(${filelist[@]} ${files[$i]})
+					let occurance=$occurance+${occurs[$i]}
+			fi
+	done
+	printf "Found %s occurances in %s file(s)" $occurance $filecount
+}
+
+function editPrompt {
+	for ((i=0; i<${#name[@]}; i++)); do
+		printf "\nEdit on line %s of %s [Y/n] ? " ${num[$i]} ${name[$i]}
+		read prompt
+		if [ "$prompt" = "n" -o "$prompt" = "N" ]; then
+			continue
+		fi
+		`printf "$edit" ${name[$i]} ${num[$i]}`
+	done
+}
+
+runGrep $@
